@@ -147,8 +147,8 @@ for k in range(32361):
 std_fill1 = np.zeros([32361,7])
 std_fill2 = np.zeros([32361,7])
 daily_std = np.hstack([std_fill1,daily_std,std_fill2])
-daily_std[:,:7] = 1000 # changed from 1 to 1000
-daily_std[:,-7:] = 1000 # changed from 1 to 1000
+daily_std[:,:7] = 1000 # dummy values as placeholders for first 7 days of January - I won't need them since I'm working with April-Sept
+daily_std[:,-7:] = 1000 # dummy values as placeholders for last 7 days of December - I won't need them since I'm working with April-Sept
 
 # redefine vec for 1940-2023
 vec = np.reshape(detrended_z500,(30660,32361))
