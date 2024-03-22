@@ -10,7 +10,7 @@ import pandas as pd
 from mvgavg import mvgavg
 
 z500_all = np.load('z500_all.npy')
-z500_trendlines = np.load('z500_trendlines.npy')
+z500_trendlines = np.load('z500_trendlines.npy') # Trendlines were calculated at each latitude over the NHEM during April-Sept
 
 z_reshape = np.reshape(z500_all,(84,365,161,201))
 
