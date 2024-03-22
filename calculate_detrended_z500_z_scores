@@ -57,7 +57,7 @@ for k in range(32361):
 z500_15d = z500_15d[365:,:]
 z500_15d = z500_15d[:-365,:]
 
-# compute daily averages of 15-day moving average for 1991-2020
+# compute daily averages of 15-day moving windows for 1991-2020
 daily_avg = np.empty([32361,365])
 for k in range(32361):
     cell = z500_15d[:,k]
@@ -101,6 +101,7 @@ for k in range(32361):
 vec = vec[365:,:]
 vec = vec[:-365,:]
 
+# compute daily sd's of 15-day moving windows for 1991-2020
 daily_std = np.empty([32361,351]) # minus 14 days (7 + 7)
 for k in range(32361):
     cell = vec[:,k]
@@ -152,6 +153,7 @@ daily_std[:,-7:] = 1000 # changed from 1 to 1000
 # redefine vec for 1940-2023
 vec = np.reshape(detrended_z500,(30660,32361))
 
+# compute standardized anomalies from the daily averages and sd's calculated above
 z500_anoms_z = np.empty([32361,30660])
 for k in range(32361):
     cell = vec[:,k]
