@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+'''
+This code downloads hourly Z500 data from ERA5 (1940-2023) over a domain encompassing 5-45N, 125-75W,
+and using a job array on the cluster that launches each year individually and in parallel.
+All other variables from ERA5 were downloaded using the same way.
+Output of this script consists of annual netCDF files.
+'''
+  
+import cdsapi
+import numpy as np
+import sys
+
+year = int(sys.argv[2]) + 1940
+
+months = list(np.arange(1,13,1))
+months = list(map(str, months))
+days = list(np.arange(1,32,1))
+days = list(map(str, days))
+times = list(np.arange(0,24,1))
+times = list(map(str, times))
+
+c = cdsapi.Client()
+c.retrieve('reanalysis-era5-pressure-levels', {
+        'product_type'  : 'reanalysis',
+        'variable'      : 'geopotential',
+        'pressure_level': '500',
+        'year'          : str(year),
+        'month'         : months,
+        'day'           : days,
+        'time'          : times,
+        'area'          : [45, -125, 5, -75],
+        'grid'          : [0.25, 0.25],
+        'format'        : 'netcdf'
+    }, f'z500_{year}.nc')
