@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+'''
+This code calculates standardized anomalies of Z500 (detrended) over the Mexico-Texas domain.
+Standardized anomalies are calculated at each grid cell in 15-day windows centered on each day over 1991-2020.
+'''
+
 import numpy as np
 import pandas as pd
 from mvgavg import mvgavg
