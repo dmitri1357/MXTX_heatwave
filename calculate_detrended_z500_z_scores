@@ -172,5 +172,5 @@ for k in range(15372):
     day = zvec[:,:,k]
     z500_flipped[:,:,k] = np.flipud(day)
 
-z500_flipped = z500_flipped.astype('float32')
-np.save('z500_anoms_z_MXTX.npy',tmax_anoms_z)
+z500_anoms_z = z500_flipped.astype('float32')
+np.save('z500_anoms_z_MXTX.npy',z500_anoms_z)
