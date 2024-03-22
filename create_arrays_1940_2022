@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+
+'''
+This program collects annual Z500 netCDF files (1940-2022), averages hourly data to daily resolution, and returns a single Numpy array of daily Z500 for 1940-2022.
+'''
+
+import xarray as xr
+import numpy as np
+import os
+
+all_files = os.listdir()
+files = []
+for file in all_files:
+    if file.endswith('.nc'):
+        files.append(file)
+
+files.sort()
+
+z500_1940_2022 = np.empty([0,161,201]).astype('float32')
+for k in range(len(files)):
+    data = xr.open_dataset(files[k])
+    data2 = data.groupby('time.dayofyear').mean() # aggregate hourly data to daily resolution
+    arr = np.squeeze(data2.to_array())
+    z500_1940_2022 = np.concatenate([z500_1940_2022,arr],axis=0)
+
+np.save('z500_1940_2022',z500_1940_2022)
