@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import rasterio
+from rasterio.transform import from_origin
+import fiona
+import rasterio
+import rasterio.mask
+
+tmax_amjjas = np.load('tmax_amjjas.npy') # load pre-processed dataset of Tmax standardized anomalies for April-September (1940-2023)
+
+# convert one day to raster
+# using 6/20/23
+june20 = tmax_amjjas[:,15269]
+day = np.reshape(june20,(161,201))
+
+# need to flip it back to being upside down for raster
+day = np.flipud(day)
+
+Z = day
+new_dataset = rasterio.open(
+        'june20.tif',
+        'w',
+        driver='GTiff',
+        height=Z.shape[0],
+        width=Z.shape[1],
+        count=1,
+        dtype=Z.dtype,
+        transform=from_origin(-125, 45, 0.25, 0.25),
+        crs='+proj=latlong')
+
+new_dataset.write(Z, 1)
+new_dataset.close()
+
+with fiona.open("texas_mexico.shp", "r") as shapefile:
+    shapes = [feature["geometry"] for feature in shapefile]
+
+with rasterio.open("june20.tif") as src:
+    out_image, out_transform = rasterio.mask.mask(src, shapes, crop=True, nodata=np.nan)
+    out_meta = src.meta
+
+out_image = np.squeeze(out_image)
+
+# referencing the "out_transform" variable: 
+# left bound is -118.5, top bound is 36.75
+
+var = np.flipud(out_image)
+
+tmax_full_extent = np.empty([161,201])
+tmax_full_extent[:] = np.nan
+
+lats_full = np.arange(5,45.01,0.25)
+lons_full = np.arange(-125,-74.99,0.25)
+tmax_full_extent[39:128,26:154] = var
+
+# removing random grid cells north of Texas that resulted from imperfect overlay
+tmax_full_extent[118,102] = np.nan
+tmax_full_extent[116,109] = np.nan
+tmax_full_extent[116,113] = np.nan
+tmax_full_extent[116,117] = np.nan
+tmax_full_extent[116,119] = np.nan
+
+# removing random grid cells north of Baja that resulted from imperfect overlay
+tmax_full_extent[111,36:41] = np.nan
+
+# removing other random grid cells
+tmax_full_extent[67,73] = np.nan
+tmax_full_extent[79,51] = np.nan
+tmax_full_extent[81,51] = np.nan
+tmax_full_extent[91,57] = np.nan
+tmax_full_extent[96,50] = np.nan
+tmax_full_extent[97,50] = np.nan
+tmax_full_extent[98,46] = np.nan
+
+# subset tmax_amjjas by raster
+
+raster_vec = np.reshape(tmax_full_extent,(32361))
+np.save('raster_vec',raster_vec)
+tmax_amjjas2 = np.empty([32361,15372])
+for k in tqdm(range(15372)):
+    day = tmax_amjjas[:,k]
+    tmax_amjjas2[:,k] = np.where(~np.isnan(raster_vec),day,raster_vec)
+    
+tmax_amjjas2 = np.swapaxes(tmax_amjjas2,1,0)
+
+tvec = np.reshape(tmax_amjjas2,(15372,161,201))
+
+# subset back to bbox to make smaller array
+tmax_subset = tvec[:,39:128,26:154]
+
+np.save('tmax_amjjas2_z',tmax_subset.astype('float32'))
