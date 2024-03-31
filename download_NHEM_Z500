@@ -2,7 +2,7 @@
 
 '''
 This code downloads Z500 data between 5-45N across the entire NHEM (-180 to 179 lon).
-This is used to calculated detrended Z500 in latitudinal bands. 
+This is used to calculate detrended Z500 in latitudinal bands. 
 '''
   
 import cdsapi
