@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import matplotlib.pyplot as plt   
+from mpl_toolkits.basemap import Basemap
+
+# set font to Arial
+import matplotlib as mpl
+mpl.rc('font',family='Arial')
+
+# Tmax dataset can be found in accompanying Zenodo repository
+tmax_amjjas2_z = np.load('tmax_amjjas2_z.npy')
+
+var = tmax_amjjas2_z[15269,:] # 6/20/23
+
+lat = np.arange(14.75,36.76,0.25)
+lon = np.arange(-118.5,-86.74,0.25)
+lon, lat = np.meshgrid(lon, lat)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.3E6, height=3.3E6,
+            lat_0=25, lon_0=-102)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('RdBu_r',24))
+cb = plt.colorbar(ticks=np.arange(-3,3.1,1),extend='max')
+cb.ax.tick_params(labelsize=23)
+plt.title('Standardized Tmax anomalies on June 20, 2023', size=20)
+plt.clim(-3,3)
+m.readshapefile('texas_mexico',name='null',color='b',linewidth=2) # shapefile of Mexico-Texas domain can be found in accompanying Zenodo repository
+plt.savefig('fig_5a.pdf',dpi=600)
