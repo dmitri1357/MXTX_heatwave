@@ -11,7 +11,7 @@ var1 = np.load('z500_1940_2022.npy')
 var2 = np.load('z500_2023.npy')
 
 z500 = np.concatenate([var1,var2],axis=0)
-z500 = z500/9.80665
+z500 = z500/9.80665 # divide by gravitational constant to convert geopotential to GPH
 
 dates = pd.date_range(start='1/1/1940', end='12/31/2023')
 dates = pd.DataFrame(dates)
