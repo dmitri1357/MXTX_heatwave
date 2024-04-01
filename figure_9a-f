@@ -1,0 +1,384 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import pandas as pd
+from collections import Counter
+import matplotlib.pyplot as plt   
+from mpl_toolkits.basemap import Basemap
+
+# set font to Arial
+import matplotlib as mpl
+mpl.rc('font',family='Arial')
+
+# datasets can be found in accompanying Zenodo repository
+actual_areas = np.load('actual_areas.npy')
+tmax_amjjas2_z = np.load('tmax_amjjas2_z.npy')
+      
+tvec = np.reshape(tmax_amjjas2_z,(15372,11392))
+
+# calculate fraction of domain with 1.5, 2, 2.5, 3, 3.5, and 4 sigma Tmax anomalies
+
+def extent_sigma(sigma,tmax_array):
+    extent = np.empty(15372)
+    for k in range(15372):
+        day = tmax_array[k,:]
+        x1 = np.where(day>=sigma)[0]
+        x2 = actual_areas[x1]
+        extent[k] = np.sum(x2)/2618551 # 2,618,551 is the area of study domain in sq km
+        
+    return extent
+
+extent15sigma = extent_sigma(sigma=1.5,tmax_array=tvec)
+extent2sigma = extent_sigma(sigma=2,tmax_array=tvec)
+extent25sigma = extent_sigma(sigma=2.5,tmax_array=tvec)
+extent3sigma = extent_sigma(sigma=3,tmax_array=tvec)
+extent35sigma = extent_sigma(sigma=3.5,tmax_array=tvec)
+extent4sigma = extent_sigma(sigma=4,tmax_array=tvec)
+
+# longest streaks of >20% of domain exceeding 1.5sd Tmax anomalies
+
+extent_thresh = 0.2
+sigma = np.where(extent15sigma>=extent_thresh,1,0)
+
+streaks = np.empty(84)
+years = np.arange(1940,2024,1)
+data_years = np.split(sigma,84)
+for k in range(84):
+    year = years[k]
+    dates = pd.date_range(start=f'4/1/{year}', end=f'9/30/{year}')
+    occ = pd.Series(data_years[k])
+    only = occ[occ == 1]
+    occurs = dates[only.index]
+    occurs = pd.DataFrame(occurs).rename(columns={0:'date'})
+    dt = occurs['date']
+    day = pd.Timedelta('1d')
+    breaks = dt.diff() != day
+    groups = breaks.cumsum()
+    groups1 = Counter(groups)
+    if len(groups1) > 0:
+        val = np.max(list(groups1.values()))
+        streaks[k] = val
+    else:
+        streaks[k] = 0
+
+from scipy import stats
+
+x = np.arange(84)
+y = streaks
+intercept = stats.linregress(x,y)[1]
+slope = stats.linregress(x,y)[0]
+vals1 = []
+for j in range(84):
+    intercept += slope
+    vals1.append(intercept)
+slope * 84 # +3.9 days
+
+x = np.arange(84)
+slopes1 = np.empty(10000)
+for k in range(10000):
+    run = np.random.permutation(streaks)
+    slopes1[k] = stats.linregress(x,run)[0]
+slope_perm = stats.percentileofscore(slopes1, slope)
+
+poly = np.polyfit(x,y,deg=3)
+
+fig = plt.figure(figsize=(8,6))
+plt.plot(streaks,'-o', color='firebrick')
+#plt.plot(vals1,'--', color='tab:brown')
+plt.plot(np.polyval(poly, x),'--', color='firebrick')
+plt.grid(linewidth=0.5)
+plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
+                                '1990','2000','2010','2020'), fontsize = 13)
+plt.yticks(np.arange(0,20.1,2), fontsize=13)
+plt.ylabel('Number of consecutive days', fontsize = 15)
+plt.title('Longest streaks of >20% of domain with >1.5sd Tmax', fontsize = 20)
+
+# longest streaks of >20% of domain exceeding 2sd Tmax anomalies
+
+extent_thresh = 0.2
+sigma = np.where(extent2sigma>=extent_thresh,1,0)
+
+streaks = np.empty(84)
+years = np.arange(1940,2024,1)
+data_years = np.split(sigma,84)
+for k in range(84):
+    year = years[k]
+    dates = pd.date_range(start=f'4/1/{year}', end=f'9/30/{year}')
+    occ = pd.Series(data_years[k])
+    only = occ[occ == 1]
+    occurs = dates[only.index]
+    occurs = pd.DataFrame(occurs).rename(columns={0:'date'})
+    dt = occurs['date']
+    day = pd.Timedelta('1d')
+    breaks = dt.diff() != day
+    groups = breaks.cumsum()
+    groups1 = Counter(groups)
+    if len(groups1) > 0:
+        val = np.max(list(groups1.values()))
+        streaks[k] = val
+    else:
+        streaks[k] = 0
+
+from scipy import stats
+
+x = np.arange(84)
+y = streaks
+intercept = stats.linregress(x,y)[1]
+slope = stats.linregress(x,y)[0]
+vals1 = []
+for j in range(84):
+    intercept += slope
+    vals1.append(intercept)
+slope * 84 # +3.9 days
+
+x = np.arange(84)
+slopes1 = np.empty(10000)
+for k in range(10000):
+    run = np.random.permutation(streaks)
+    slopes1[k] = stats.linregress(x,run)[0]
+slope_perm = stats.percentileofscore(slopes1, slope)
+
+poly = np.polyfit(x,y,deg=3)
+
+fig = plt.figure(figsize=(8,6))
+plt.plot(streaks,'-o', color='firebrick')
+#plt.plot(vals1,'--', color='tab:brown')
+plt.plot(np.polyval(poly, x),'--', color='firebrick')
+plt.grid(linewidth=0.5)
+plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
+                                '1990','2000','2010','2020'), fontsize = 13)
+plt.yticks(np.arange(0,12.1,2), fontsize=13)
+plt.ylabel('Number of consecutive days', fontsize = 15)
+plt.title('Longest streaks of >20% of domain with >2sd Tmax', fontsize = 20)
+
+# longest streaks of >10% of domain exceeding 2sd Tmax anomalies
+
+extent_thresh = 0.1
+sigma = np.where(extent2sigma>=extent_thresh,1,0)
+
+streaks = np.empty(84)
+years = np.arange(1940,2024,1)
+data_years = np.split(sigma,84)
+for k in range(84):
+    year = years[k]
+    dates = pd.date_range(start=f'4/1/{year}', end=f'9/30/{year}')
+    occ = pd.Series(data_years[k])
+    only = occ[occ == 1]
+    occurs = dates[only.index]
+    occurs = pd.DataFrame(occurs).rename(columns={0:'date'})
+    dt = occurs['date']
+    day = pd.Timedelta('1d')
+    breaks = dt.diff() != day
+    groups = breaks.cumsum()
+    groups1 = Counter(groups)
+    if len(groups1) > 0:
+        val = np.max(list(groups1.values()))
+        streaks[k] = val
+    else:
+        streaks[k] = 0
+
+from scipy import stats
+
+x = np.arange(84)
+y = streaks
+intercept = stats.linregress(x,y)[1]
+slope = stats.linregress(x,y)[0]
+vals1 = []
+for j in range(84):
+    intercept += slope
+    vals1.append(intercept)
+slope * 84 # +3.9 days
+
+x = np.arange(84)
+slopes1 = np.empty(10000)
+for k in range(10000):
+    run = np.random.permutation(streaks)
+    slopes1[k] = stats.linregress(x,run)[0]
+slope_perm = stats.percentileofscore(slopes1, slope)
+
+poly = np.polyfit(x,y,deg=3)
+
+fig = plt.figure(figsize=(8,6))
+plt.plot(streaks,'-o', color='firebrick')
+#plt.plot(vals1,'--', color='tab:brown')
+plt.plot(np.polyval(poly, x),'--', color='firebrick')
+plt.grid(linewidth=0.5)
+plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
+                                '1990','2000','2010','2020'), fontsize = 13)
+plt.yticks(np.arange(0,20.1,2), fontsize=13)
+plt.ylabel('Number of consecutive days', fontsize = 15)
+plt.title('Longest streaks of >10% of domain with >2sd Tmax', fontsize = 20)
+
+# longest streaks of >10% of domain exceeding 2.5sd Tmax anomalies
+
+extent_thresh = 0.1
+sigma = np.where(extent25sigma>=extent_thresh,1,0)
+
+streaks = np.empty(84)
+years = np.arange(1940,2024,1)
+data_years = np.split(sigma,84)
+for k in range(84):
+    year = years[k]
+    dates = pd.date_range(start=f'4/1/{year}', end=f'9/30/{year}')
+    occ = pd.Series(data_years[k])
+    only = occ[occ == 1]
+    occurs = dates[only.index]
+    occurs = pd.DataFrame(occurs).rename(columns={0:'date'})
+    dt = occurs['date']
+    day = pd.Timedelta('1d')
+    breaks = dt.diff() != day
+    groups = breaks.cumsum()
+    groups1 = Counter(groups)
+    if len(groups1) > 0:
+        val = np.max(list(groups1.values()))
+        streaks[k] = val
+    else:
+        streaks[k] = 0
+
+from scipy import stats
+
+x = np.arange(84)
+y = streaks
+intercept = stats.linregress(x,y)[1]
+slope = stats.linregress(x,y)[0]
+vals1 = []
+for j in range(84):
+    intercept += slope
+    vals1.append(intercept)
+slope * 84 # +3.9 days
+
+x = np.arange(84)
+slopes1 = np.empty(10000)
+for k in range(10000):
+    run = np.random.permutation(streaks)
+    slopes1[k] = stats.linregress(x,run)[0]
+slope_perm = stats.percentileofscore(slopes1, slope)
+
+poly = np.polyfit(x,y,deg=3)
+
+fig = plt.figure(figsize=(8,6))
+plt.plot(streaks,'-o', color='firebrick')
+#plt.plot(vals1,'--', color='tab:brown')
+plt.plot(np.polyval(poly, x),'--', color='firebrick')
+plt.grid(linewidth=0.5)
+plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
+                                '1990','2000','2010','2020'), fontsize = 13)
+plt.yticks(np.arange(0,12.1,2), fontsize=13)
+plt.ylabel('Number of consecutive days', fontsize = 15)
+plt.title('Longest streaks of >10% of domain with >2.5sd Tmax', fontsize = 20)
+
+# longest streaks of >5% of domain exceeding 2.5sd Tmax anomalies
+
+extent_thresh = 0.05
+sigma = np.where(extent25sigma>=extent_thresh,1,0)
+
+streaks = np.empty(84)
+years = np.arange(1940,2024,1)
+data_years = np.split(sigma,84)
+for k in range(84):
+    year = years[k]
+    dates = pd.date_range(start=f'4/1/{year}', end=f'9/30/{year}')
+    occ = pd.Series(data_years[k])
+    only = occ[occ == 1]
+    occurs = dates[only.index]
+    occurs = pd.DataFrame(occurs).rename(columns={0:'date'})
+    dt = occurs['date']
+    day = pd.Timedelta('1d')
+    breaks = dt.diff() != day
+    groups = breaks.cumsum()
+    groups1 = Counter(groups)
+    if len(groups1) > 0:
+        val = np.max(list(groups1.values()))
+        streaks[k] = val
+    else:
+        streaks[k] = 0
+
+from scipy import stats
+
+x = np.arange(84)
+y = streaks
+intercept = stats.linregress(x,y)[1]
+slope = stats.linregress(x,y)[0]
+vals1 = []
+for j in range(84):
+    intercept += slope
+    vals1.append(intercept)
+slope * 84 # +3.9 days
+
+x = np.arange(84)
+slopes1 = np.empty(10000)
+for k in range(10000):
+    run = np.random.permutation(streaks)
+    slopes1[k] = stats.linregress(x,run)[0]
+slope_perm = stats.percentileofscore(slopes1, slope)
+
+poly = np.polyfit(x,y,deg=3)
+
+fig = plt.figure(figsize=(8,6))
+plt.plot(streaks,'-o', color='firebrick')
+#plt.plot(vals1,'--', color='tab:brown')
+plt.plot(np.polyval(poly, x),'--', color='firebrick')
+plt.grid(linewidth=0.5)
+plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
+                                '1990','2000','2010','2020'), fontsize = 13)
+plt.yticks(np.arange(0,16.1,2), fontsize=13)
+plt.ylabel('Number of consecutive days', fontsize = 15)
+plt.title('Longest streaks of >5% of domain with >2.5sd Tmax', fontsize = 20)
+
+# longest streaks of >1% of domain exceeding 3sd Tmax anomalies
+
+extent_thresh = 0.01
+sigma = np.where(extent3sigma>=extent_thresh,1,0)
+
+streaks = np.empty(84)
+years = np.arange(1940,2024,1)
+data_years = np.split(sigma,84)
+for k in range(84):
+    year = years[k]
+    dates = pd.date_range(start=f'4/1/{year}', end=f'9/30/{year}')
+    occ = pd.Series(data_years[k])
+    only = occ[occ == 1]
+    occurs = dates[only.index]
+    occurs = pd.DataFrame(occurs).rename(columns={0:'date'})
+    dt = occurs['date']
+    day = pd.Timedelta('1d')
+    breaks = dt.diff() != day
+    groups = breaks.cumsum()
+    groups1 = Counter(groups)
+    if len(groups1) > 0:
+        val = np.max(list(groups1.values()))
+        streaks[k] = val
+    else:
+        streaks[k] = 0
+
+from scipy import stats
+
+x = np.arange(84)
+y = streaks
+intercept = stats.linregress(x,y)[1]
+slope = stats.linregress(x,y)[0]
+vals1 = []
+for j in range(84):
+    intercept += slope
+    vals1.append(intercept)
+slope * 84 # +3.9 days
+
+x = np.arange(84)
+slopes1 = np.empty(10000)
+for k in range(10000):
+    run = np.random.permutation(streaks)
+    slopes1[k] = stats.linregress(x,run)[0]
+slope_perm = stats.percentileofscore(slopes1, slope)
+
+poly = np.polyfit(x,y,deg=3)
+
+fig = plt.figure(figsize=(8,6))
+plt.plot(streaks,'-o', color='firebrick')
+#plt.plot(vals1,'--', color='tab:brown')
+plt.plot(np.polyval(poly, x),'--', color='firebrick')
+plt.grid(linewidth=0.5)
+plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
+                                '1990','2000','2010','2020'), fontsize = 13)
+plt.yticks(np.arange(0,16.1,2), fontsize=13)
+plt.ylabel('Number of consecutive days', fontsize = 15)
+plt.title('Longest streaks of >1% of domain with >3sd Tmax', fontsize = 20)
