@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt   
+from mpl_toolkits.basemap import Basemap
+
+# set font to Arial
+import matplotlib as mpl
+mpl.rc('font',family='Arial')
+
+# datasets can be found in accompanying Zenodo repository
+
+# panel A - Z500 anomalies on 6/20/2023
+
+zvec = np.load('zvec_detrended_z.npy') # this dataset is the detrended Z500 z-scores over a rectangle encompassing the Mexico-Texas region (14.75-36.75N, 118.5-86.75W)
+
+var = zvec[15269,:] 
+var = np.reshape(var,(89,128))
+lat = np.arange(14.75,36.76,0.25)
+lon = np.arange(-118.5,-86.74,0.25)
+lon, lat = np.meshgrid(lon, lat)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.7E6, height=3.3E6,
+            lat_0=25, lon_0=-102.6)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('RdBu_r',48))
+plt.title('Standardized, detrended Z500 anomaly on June 20, 2023', size=14)
+cb = plt.colorbar(ticks=np.arange(-3,3.01,0.5), aspect=45, orientation='horizontal')
+cb.ax.tick_params(labelsize=15)
+plt.clim(-3,3)
+
+# panel C - Z500 anomalies on June 15-28, 2023
+
+var = zvec[15264:15278,:] # date index (0 to 15371) represents all days between April-September, 1940-2023
+var = np.nanmean(var,axis=0)
+var = np.reshape(var,(89,128))
+lat = np.arange(14.75,36.76,0.25)
+lon = np.arange(-118.5,-86.74,0.25)
+lon, lat = np.meshgrid(lon, lat)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.7E6, height=3.3E6,
+            lat_0=25, lon_0=-102.6)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('RdBu_r',48))
+plt.title('Standardized, detrended Z500 anomalies during June 15-28, 2023', size=18)
+#cb = plt.colorbar(ticks=np.arange(-3,3.01,0.5), orientation='horizontal', aspect=45)
+#cb.ax.tick_params(labelsize=15)
+plt.clim(-3,3)
+
+# panel B - Tmax anomalies on 6/20/2023
+
+tmax_z = np.load('tmax_amjjas2_z.npy')
+tvec = np.reshape(tmax_z,(15372,11392))
+
+tvec = np.reshape(tvec,(15372,89,128))
+var = tvec[15269,:,:]
+
+lat = np.arange(14.75,36.76,0.25)
+lon = np.arange(-118.5,-86.74,0.25)
+lon, lat = np.meshgrid(lon, lat)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.3E6, height=3.3E6,
+            lat_0=25, lon_0=-102)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('RdBu_r',48))
+plt.title('Tmax anomalies on June 20, 2023', size=18)
+cb = plt.colorbar(ticks=np.arange(-3,3.01,0.5), orientation='horizontal', aspect=45)
+cb.ax.tick_params(labelsize=15)
+plt.clim(-3,3)
+m.readshapefile('texas_mexico',name='oceans',color='b',linewidth=2)   
+plt.savefig('fig_3b_and_colorbar.pdf',dpi=600)
+
+# panel E - Tmax anomalies on June 15-28, 2023
+
+subset = tmax_z[15264:15278,:]
+var = np.nanmean(subset,axis=0)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.3E6, height=3.3E6,
+            lat_0=25, lon_0=-102)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('RdBu_r',48))
+plt.title('Tmax anomalies during June 15-28, 2023', size=25)
+#cb = plt.colorbar(ticks=np.arange(-3,3.01,0.5))
+#cb.ax.tick_params(labelsize=15)
+plt.clim(-3,3)
+m.readshapefile('texas_mexico',name='oceans',color='b',linewidth=2)  
+plt.savefig('fig_3e.pdf',dpi=600) 
+
+# panel C - soil moisture anomalies on 6/20/2023
+
+sm_amjjas2_z = np.load('sm_amjjas2_z.npy')
+svec = np.reshape(sm_amjjas2_z,(15372,11392))
+
+svec = np.reshape(svec,(15372,89,128))
+var = svec[15269,:,:]
+
+lat = np.arange(14.75,36.76,0.25)
+lon = np.arange(-118.5,-86.74,0.25)
+lon, lat = np.meshgrid(lon, lat)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.3E6, height=3.3E6,
+            lat_0=25, lon_0=-102)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('BrBG',24))
+plt.title('Soil moist. anomalies on June 20, 2023', size=18)
+cb = plt.colorbar(ticks=np.arange(-3,3.01,0.5), orientation='horizontal', aspect=45)
+cb.ax.tick_params(labelsize=15)
+plt.clim(-3,3)
+m.readshapefile('texas_mexico',name='oceans',color='b',linewidth=2)   
+plt.savefig('fig_3c_and_colorbar.pdf',dpi=600)
+
+# panel F - soil moisture anomalies on June 15-28, 2023
+
+subset = tmax_z[15264:15278,:]
+var = np.nanmean(subset,axis=0)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.3E6, height=3.3E6,
+            lat_0=25, lon_0=-102)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('RdBu_r',48))
+plt.title('Tmax anomalies during June 15-28, 2023', size=25)
+#cb = plt.colorbar(ticks=np.arange(-3,3.01,0.5))
+#cb.ax.tick_params(labelsize=15)
+plt.clim(-3,3)
+m.readshapefile('texas_mexico',name='oceans',color='b',linewidth=2)  
+
