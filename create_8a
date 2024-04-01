@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import pandas as pd
+from scipy import stats
+import matplotlib.pyplot as plt   
+
+# set font to Arial
+import matplotlib as mpl
+mpl.rc('font',family='Arial')
+
+# datasets can be found in accompanying Zenodo repository
+tmax_z_normed = np.load('tmax_z_normed2.npy')
+
+dates = pd.date_range(start='1/1/1940', end='12/31/2023')
+dates = dates[~((dates.month == 2) & (dates.day == 29))] # index takes into account that I removed leap days
+dates = pd.DataFrame(dates)
+dates['month'] = pd.to_datetime(dates.iloc[:,0]).dt.month
+dates = dates[dates.month.isin([4,5,6,7,8,9])]
+dates.drop(columns='month',inplace=True)
+
+dates['z_mean'] = tmax_z_normed
+data = np.array(dates.z_mean)
+
+# calculate longest streak in each year
+streaks = np.empty(84)
+data_years = np.split(data,84)
+for k in range(84):
+    yr = data_years[k]
+    streaks[k] = np.nanmax(yr)
+
+# calculate slope of linear trend
+x = np.arange(84)
+y = streaks
+intercept = stats.linregress(x,y)[1]
+slope = stats.linregress(x,y)[0]
+vals1 = []
+for j in range(84):
+    intercept += slope
+    vals1.append(intercept)
+slope * 84 # +3.9 days
+
+# permutation test for statistical significance
+x = np.arange(84)
+slopes1 = np.empty(10000)
+for k in range(10000):
+    run = np.random.permutation(streaks)
+    slopes1[k] = stats.linregress(x,run)[0]
+slope_perm = stats.percentileofscore(slopes1, slope)
+
+#poly = np.polyfit(x,y,deg=3)
+
+fig = plt.figure(figsize=(8,6))
+plt.plot(streaks,'-o', color='firebrick')
+plt.plot(vals1,'--', color='tab:brown')
+#plt.plot(np.polyval(poly, x),'--', color='firebrick')
+plt.grid(linewidth=0.5)
+plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
+                                '1990','2000','2010','2020'), fontsize = 13)
+plt.yticks(np.arange(0,4.01,0.5), fontsize=13)
+plt.ylabel('Tmax standardized anomaly', fontsize = 15)
+plt.title('Highest daily value each year', fontsize = 20)
