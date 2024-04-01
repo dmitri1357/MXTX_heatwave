@@ -18,7 +18,7 @@ def corr2(a,b): # define function to compute 2D pattern correlation
     r = (a*b).sum() / np.sqrt((a*a).sum() * (b*b).sum())
     return r
 
-# this the Z500 standardized, detrended anomalies that are subset to the smaller rectangle used for ciculation matching
+# this is the Z500 standardized, detrended anomalies that are subset to the smaller rectangle used for ciculation matching
 zvec = np.load('zvec_smaller.npy')
 
 idx = int(sys.argv[2])
