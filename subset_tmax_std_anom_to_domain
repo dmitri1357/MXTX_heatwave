@@ -5,6 +5,7 @@ import rasterio
 from rasterio.transform import from_origin
 import fiona
 import rasterio.mask
+from tqdm import tqdm
 
 tmax_amjjas = np.load('tmax_amjjas.npy') # load pre-processed dataset of Tmax standardized anomalies for April-September (1940-2023)
 
