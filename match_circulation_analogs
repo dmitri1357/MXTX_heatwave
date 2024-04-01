@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # batch script for kamiak, which uses a job array to launch all 15,372 daily matching scripts in parallel (in batches of 187) 
-# all batches finish executign in approx. 1h 40m
+# all batches finish executing in approx. 1h 40m
 # following this, the script to concat the daily corr files into single array runs for another approx 3h 15m
 
 import numpy as np
