@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+
+# batch script for kamiak, where even there it runs for 1h 40m
+# following that, the script to concat the corrs into single array is another 3h 16m
+
+import numpy as np
+import sys
+
+def mean2(x):
+    y = np.sum(x) / np.size(x)
+    return y
+
+def corr2(a,b): # define function to compute 2D pattern correlation
+    a = a - mean2(a)
+    b = b - mean2(b)
+
+    r = (a*b).sum() / np.sqrt((a*a).sum() * (b*b).sum())
+    return r
+
+zvec = np.load('zvec_smaller.npy')
+
+idx = int(sys.argv[2])
+
+target = zvec[idx,:]
+corrs = np.empty(15372)
+for k in range(15372):
+    day = zvec[k,:]
+    corrs[k] = corr2(target,day)
+
+np.save(f'corrs{idx}',corrs)
