@@ -16,13 +16,13 @@ tmax_amjjas2_z = np.load('tmax_amjjas2_z.npy')
       
 tvec = np.reshape(tmax_amjjas2_z,(15372,11392))
 
-# calculate extents of grid cells with 1.5, 2, 2.5, 3, 3.5, and 4 sigma Tmax anomalies
+# calculate fraction of domain with 1.5, 2, 2.5, 3, 3.5, and 4 sigma Tmax anomalies
 extent15sigma = np.empty(15372)
 for k in tqdm(range(15372)):
     day = tvec[k,:]
-    x1 = np.where(day>=1.5)[0]
+    x1 = np.where(day>=1.5)[0] 
     x2 = actual_areas[x1]
-    extent15sigma[k] = np.sum(x2)/2618551
+    extent15sigma[k] = np.sum(x2)/2618551 # 2,618,551 is area of domain in sq km
 
 extent2sigma = np.empty(15372)
 for k in tqdm(range(15372)):
@@ -74,7 +74,8 @@ dates['>2.5 sd'] = extent25sigma
 dates['>3 sd'] = extent3sigma
 dates['>3.5 sd'] = extent35sigma
 dates['>4 sd'] = extent4sigma
-   
+
+# map location of grid cells with >2sd Tmax
 var = tmax_amjjas2_z[15269,:,:] # day 15269 corresponds to 6/20/2023 (out of 15372 days in April-September 1940-2023)
 var = np.where(var>=2,1,np.nan)
 
