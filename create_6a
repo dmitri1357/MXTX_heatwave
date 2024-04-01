@@ -74,7 +74,7 @@ dates['>3 sd'] = extent3sigma
 dates['>3.5 sd'] = extent35sigma
 dates['>4 sd'] = extent4sigma
    
-var = tmax_amjjas2_z[15269,:,:]
+var = tmax_amjjas2_z[15269,:,:] # day 15269 corresponds to 6/20/2023 (out of 15372 days in April-September 1940-2023)
 var = np.where(var>=2,1,np.nan)
 
 lat = np.arange(14.75,36.76,0.25)
@@ -91,5 +91,26 @@ m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
 m.drawcoastlines(color='black')
 m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('Reds'))
 plt.title('Grid cells >2 sd Tmax on June 20, 2023', size=20)
+plt.clim(0,1)      
+m.readshapefile('texas_mexico',name='oceans',color='b',linewidth=2)
+
+# create Fig 6b
+var = tmax_amjjas2_z[14387,:] # day 14387 corresponds to 7/23/2018 (out of 15372 days in April-September 1940-2023)
+var = np.where(var>=2,1,np.nan)
+
+lat = np.arange(14.75,36.76,0.25)
+lon = np.arange(-118.5,-86.74,0.25)
+lon, lat = np.meshgrid(lon, lat)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.3E6, height=3.3E6,
+            lat_0=25, lon_0=-102)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('Reds'))
+plt.title('Grid cells >2 sd Tmax on July 23, 2018', size=20)
 plt.clim(0,1)      
 m.readshapefile('texas_mexico',name='oceans',color='b',linewidth=2)
