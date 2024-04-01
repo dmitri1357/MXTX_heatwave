@@ -65,16 +65,19 @@ tmax_1990_2021 = tmax_normed2[idx,:] # grabbing 1990 and 2021 to complete 15-day
 vec = np.nanmean(tmax_1990_2021,axis=1)
 
 # computing 15-day windows for 1990-2021, then will subset to 1991-2020
-from mvgavg import mvgavg
-z500_15d = np.empty(11680)
-cell = list(vec)
-averages = list(mvgavg(cell,15))
-x1 = cell[:7]
-x2 = averages
-x3 = cell[-7:]
-x2.extend(x3)
-x1.extend(x2)
-z500_15d = x1
+
+def moving_window(num_year,window_length):
+    z500_15d = np.empty((num_year+2)*365)
+    cell = list(vec)
+    averages = list(mvgavg(cell,window_length))
+    x1 = cell[:int((window_length-1)/2)]
+    x2 = averages
+    x3 = cell[int((window_length-1)/2):]
+    x2.extend(x3)
+    x1.extend(x2)
+    return x1
+
+z500_15d = moving_window(30,15)
 
 # drop 1990 and 2021
 z500_15d = z500_15d[365:]
