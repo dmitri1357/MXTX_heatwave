@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 from mvgavg import mvgavg
 
-# datasets can be found in accompanying Zenodo repository
 tmax_1940_2022 = np.load('tmax_1940_2022.npy')
 tmax_2023 = np.load('tmax_2023.npy')
 tmax_all = np.concatenate([tmax_1940_2022,tmax_2023],axis=0)
