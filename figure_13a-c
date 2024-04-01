@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt  
+from scipy import stats
+import seaborn as sns
+
+# set font to Arial
+import matplotlib as mpl
+mpl.rc('font',family='Arial')
+
+# datasets can be found in accompanying Zenodo repository
+
+z500_z_normed = np.load('z500_z_normed2.npy') # not detrended
+tmax_z_normed = np.load('tmax_z_normed2.npy')
+sm_z_normed = np.load('sm_z_normed2.npy')
+
+# panel A
+
+fig = plt.figure(figsize=(6,5))
+sns.regplot(z500_z_normed,tmax_z_normed,color='k')
+plt.yticks(np.arange(-5,4.01,1), fontsize=13)
+plt.xticks(np.arange(-5,4.01,1), fontsize=13)
+[plt.scatter(z500_z_normed[k],
+            tmax_z_normed[k],marker='*',
+            c='w',edgecolor='k',s=300,zorder=100,
+            alpha=0.8) for k in np.arange(15264,15278,1)]
+plt.scatter(z500_z_normed,tmax_z_normed,
+            c=sm_z_normed,cmap=plt.cm.get_cmap('RdBu',24))
+#plt.colorbar(ticks=np.arange(-3,3.01,1))
+plt.clim(-3,3)
+[plt.scatter(z500_z_normed[k],tmax_z_normed[k],
+              c=sm_z_normed[k],zorder=101,vmin=-3,vmax=3,
+              cmap=plt.cm.get_cmap('RdBu',24)) for k in np.arange(15264,15278,1)]
+plt.yticks(np.arange(-5,4.01,1), fontsize=13)
+plt.xticks(np.arange(-5,4.01,1), fontsize=13)
+plt.ylabel('Domain-average Tmax z-score', fontsize = 14)
+plt.xlabel('Domain-average Z500 z-score', fontsize = 14)
+plt.axhline(y=0,color='black',linestyle='--',lw=1)
+plt.axvline(x=0,color='black',linestyle='--',lw=1)
+
+# panel B
+
+fig = plt.figure(figsize=(6,5))
+sns.regplot(sm_z_normed,tmax_z_normed,color='k')
+plt.yticks(np.arange(-5,4.01,1), fontsize=13)
+plt.xticks(np.arange(-3,5.01,1), fontsize=13)
+[plt.scatter(sm_z_normed[k],
+            tmax_z_normed[k],marker='*',
+            c='w',edgecolor='k',s=300,zorder=100,
+            alpha=0.8) for k in np.arange(15264,15278,1)]
+plt.scatter(sm_z_normed,tmax_z_normed,
+            c=z500_z_normed,cmap=plt.cm.get_cmap('RdBu_r',24))
+#plt.colorbar(ticks=np.arange(-4,4.01,1))
+plt.clim(-4,4)
+[plt.scatter(sm_z_normed[k],tmax_z_normed[k],
+             c=z500_z_normed[k],zorder=101,vmin=-4,vmax=4,
+             cmap=plt.cm.get_cmap('RdBu_r',32)) for k in np.arange(15264,15278,1)]
+plt.yticks(np.arange(-5,4.01,1), fontsize=13)
+plt.xticks(np.arange(-3,5.01,1), fontsize=13)
+plt.ylabel('Domain-average Tmax z-score', fontsize = 14)
+plt.xlabel('Domain-average Soil Moisture z-score', fontsize = 14)
+plt.axhline(y=0,color='black',linestyle='--',lw=1)
+plt.axvline(x=0,color='black',linestyle='--',lw=1)
+
+# panel C
+
+fig = plt.figure(figsize=(6,5))
+sns.regplot(sm_z_normed,z500_z_normed,color='k')
+plt.yticks(np.arange(-5,4.01,1), fontsize=13)
+plt.xticks(np.arange(-3,5.01,1), fontsize=13)
+[plt.scatter(sm_z_normed[k],
+            z500_z_normed[k],marker='*',
+            c='w',edgecolor='k',s=300,zorder=100,
+            alpha=0.8) for k in np.arange(15264,15278,1)]
+plt.scatter(sm_z_normed,z500_z_normed,
+            c=tmax_z_normed,cmap=plt.cm.get_cmap('RdBu_r',24))
+#plt.colorbar(ticks=np.arange(-3,3.01,1))
+plt.clim(-3,3)
+[plt.scatter(sm_z_normed[k],z500_z_normed[k],
+             c=tmax_z_normed[k],zorder=101,vmin=-3,vmax=3,
+             cmap=plt.cm.get_cmap('RdBu_r',24)) for k in np.arange(15264,15278,1)]
+plt.yticks(np.arange(-5,4.01,1), fontsize=13)
+plt.xticks(np.arange(-3,5.01,1), fontsize=13)
+plt.ylabel('Domain-average Z500 z-score', fontsize = 14)
+plt.xlabel('Domain-average Soil Moisture z-score', fontsize = 14)
+plt.axhline(y=0,color='black',linestyle='--',lw=1)
+plt.axvline(x=0,color='black',linestyle='--',lw=1)
