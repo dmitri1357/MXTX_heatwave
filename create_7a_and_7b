@@ -20,17 +20,22 @@ np.nanmax(maxs)
 np.nanmin(maxs)
 np.size(np.where(maxs>0)) # 3792 grid cells
 
-idx_max = np.empty(11392)
-idx_max[:] = np.nan
-for k in tqdm(range(11392)):
-    cell = tvec[:,k]
-    cell[15280:] = np.nan
-    if np.nanmax(cell) > 0:
-        cell = cell[~np.isnan(cell)]
-        idx_max[k] = np.argmax(cell)
+def where_highest(start_day,end_day,tmax_array):
+    idx_max = np.empty(11392)
+    idx_max[:] = np.nan
+    for k in range(11392):
+        cell = tmax_array[:,k]
+        cell[15280:] = np.nan # remove data after June 2023
+        if np.nanmax(cell) > 0:
+            cell = cell[~np.isnan(cell)]
+            idx_max[k] = np.argmax(cell)
+    
+    highest = np.where((idx_max>=start_day)&(idx_max<=end_day),1,0) 
+    highest = np.where(highest==0,np.nan,highest)
+    
+    return highest
 
-jun23_highest = np.where((idx_max>=15250)&(idx_max<=15279),1,0) 
-jun23_highest = np.where(jun23_highest==0,np.nan,jun23_highest)
+jun23_highest = where_highest(15250,15279,tmax_array=tvec)
         
 var = np.reshape(jun23_highest,(89,128))
 
@@ -50,3 +55,31 @@ m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('Reds'))
 plt.title('Grid cells that recorded highest daily Tmax z-scores in June 2023 \n (compared to all days in April-September 1940-2023)', size=20)
 plt.clim(0,1)      
 m.readshapefile('texas_mexico',name='null',color='b',linewidth=2)
+
+# figure 7b (as above, but for absolute tmax)
+
+tmax_amjjas2 = np.load('tmax_amjjas2.npy') # load actual Tmax
+
+tvec = np.reshape(tmax_amjjas2,(15372,11392))
+
+# reuse function from above
+jun23_highest = where_highest(15250,15279,tmax_array=tvec)
+        
+var = np.reshape(jun23_highest,(89,128))
+
+lat = np.arange(14.75,36.76,0.25)
+lon = np.arange(-118.5,-86.74,0.25)
+lon, lat = np.meshgrid(lon, lat)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.3E6, height=3.3E6,
+            lat_0=25, lon_0=-102)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('Reds'))
+plt.title('Grid cells that recorded highest daily absolute Tmax in June 2023 \n (compared to all days in April-September 1940-2023)', size=20)
+plt.clim(0,1)      
+m.readshapefile('texas_mexico',name='oceans',color='b',linewidth=2)
