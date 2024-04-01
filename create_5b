@@ -10,10 +10,15 @@ vals = tmax_z_normed
 sigma = np.where(vals>=2,1,0) # the "vals>=2" specifies that I'm only looking for values greater/equal than 2 s.d.
 
 # calculate longest streak in each year that had domain-averaged tmax >2 s.d.
-streaks = np.empty(84)
-years = np.arange(1940,2024,1)
-data_years = np.split(sigma,84)
-for k in range(84):
+
+start_year = 1940
+end_year = 2023
+
+length_of_record = int((end_year+1)-start_year)
+streaks = np.empty(length_of_record)
+years = np.arange(start_year,end_year+1,1)
+data_years = np.split(sigma,length_of_record)
+for k in range(length_of_record):
     year = years[k]
     dates = pd.date_range(start=f'4/1/{year}', end=f'9/30/{year}')
     occ = pd.Series(data_years[k])
