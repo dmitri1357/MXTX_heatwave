@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt   
+
+# set font to Arial
+import matplotlib as mpl
+mpl.rc('font',family='Arial')
+
+# datasets can be found in accompanying Zenodo repository
+
+all_corrs = np.load('all_corrs.npy')
+
+this_day = all_corrs[15269,:]
+mats = np.zeros(15372)
+for j in range(15372):
+    if this_day[j] > 0.8: # using 0.8 as the pattern correlation cutoff
+        mats[j] = 1
+
+splits = np.split(mats,84)
+counts = [np.nansum(splits[k]) for k in range(84)]
+
+# plot panel A
+
+fig = plt.figure(figsize=(8,6))
+plt.plot(counts,'-o', color='firebrick')
+#plt.plot(np.polyval(poly, x),'--', color='firebrick')
+#plt.grid(linewidth=0.5, color='0.5', alpha=0.5, linestyle='-.')
+plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
+                                '1990','2000','2010','2020'), fontsize = 13)
+plt.yticks(np.arange(0,25.1,5), fontsize=13)
+plt.ylabel('Number of days', fontsize = 15)
+plt.title('Number of days with patterns similar to June 20, 2023', fontsize = 18)
+plt.savefig('fig_3g.pdf',dpi=600)
+
+# plot panel B
+
+tmax_z_normed2 = np.load('tmax_z_normed2.npy')
+tmax_subs = np.where(mats==1,tmax_z_normed2,np.nan) # grab Tmax on days that had matched patterns
+splits2 = np.split(tmax_subs,84)
+splits_df = pd.DataFrame(splits2)
+
+# calculate Tmax means for each year on all matched pattern days
+meanvals = []
+for k in range(84):
+    meanvals.append(np.nanmean(splits_df.iloc[k,:]))
+
+fig = plt.figure(figsize=(8,6))
+plt.plot(meanvals,'o', color='firebrick', lw=2)
+plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
+                                '1990','2000','2010','2020'), fontsize = 13)
+plt.yticks(np.arange(-3,3.1,0.5), fontsize=13)
+plt.ylabel('Domain-averaged Tmax s.d.', fontsize = 18)
+plt.title('Domain-averaged Tmax s.d. during \n patterns similar to June 20, 2023', 
+          fontsize = 20)
