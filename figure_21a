@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from netCDF4 import Dataset
+import cartopy.crs as ccrs
+import cartopy
+
+# set font to Arial
+import matplotlib as mpl
+mpl.rc('font',family='Arial')
+
+# datasets can be found in accompanying Zenodo repository
+
+# calculate 2023 SST anomalies
+
+dataset = Dataset('sst.mnmean.nc') # load monthly SST values from ERSSTv5
+sst = np.squeeze(np.array(dataset.variables['sst']))
+sst_2023 = sst[2031:2037,:,:]
+
+dataset = Dataset('sst.mon.ltm.1991-2020.nc') # load monthly SST anomalies 
+sst_climo = np.squeeze(np.array(dataset.variables['sst']))
+sst_normals = sst_climo[3:9,:,:]
+
+vec1 = np.reshape(sst_2023,(6,16020))
+vec2 = np.reshape(sst_normals,(6,16020))
+mean1 = np.nanmean(vec1,axis=0)
+mean2 = np.nanmean(vec2,axis=0)
+
+sst_anoms_2023 = mean1 - mean2
+
+# set land to nans
+sstx = np.nanmean(sst,axis=0)
+svec = np.reshape(sstx,(16020))
+new_sst = np.where(svec>0,sst_anoms_2023,np.nan)
+sst_anoms_2023 = new_sst
+
+lat = np.arange(-88,88.1,2)
+lon = np.arange(0,358.1,2)
+lon, lat = np.meshgrid(lon, lat)
+
+var = np.flipud(np.reshape(sst_anoms_2023,(89,180)))
+proj = ccrs.PlateCarree()
+fig, axes = plt.subplots(1, 1, figsize=(10,6), subplot_kw=dict(projection=proj))
+axes.set_extent([-180, 0, -20, 60], crs=ccrs.PlateCarree())
+im = axes.pcolormesh(lon, lat, var, cmap=plt.cm.get_cmap('coolwarm',20),
+                   transform=ccrs.PlateCarree(), zorder=2, vmin=-3, vmax=3)
+axes.coastlines(zorder=101)
+#axes.add_feature(cartopy.feature.OCEAN, zorder=100, edgecolor='k',
+#               facecolor='w')
+axes.add_feature(cartopy.feature.BORDERS, zorder=100, edgecolor='k',
+               linestyle='solid', linewidth=0.5)
+#ax_list[i].set_xticks(np.arange(-180,181,60), crs=ccrs.PlateCarree())
+#ax_list[i].set_yticks(np.arange(-90,91,60), crs=ccrs.PlateCarree())
+plt.title('SST anomalies during April-September 2023', size=20)
+fig.colorbar(im, ax=axes, ticks=np.arange(-3,3.01,1), extend='max',
+             shrink=0.7, location='bottom', fraction=0.05, pad=0.07, aspect=45)
