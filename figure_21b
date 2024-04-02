@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt 
+from scipy import stats
+import cartopy.crs as ccrs
+import cartopy
+
+# set font to Arial
+import matplotlib as mpl
+mpl.rc('font',family='Arial')
+
+# datasets can be found in accompanying Zenodo repository
+
+sst_vec = np.load('sst_vec.npy') # detrended SST anomalies
+tmax = np.load('tmax_normed_detrended.npy') # detrended, domain-averaged Tmax
+
+dates = pd.date_range(start='1/1/1940', end='12/31/2023')
+dates = dates[dates.month.isin([4,5,6,7,8,9])]
+dates = pd.DataFrame(dates)
+dates['month'] = pd.to_datetime(dates.iloc[:,0]).dt.month
+dates.rename(columns={0:'date'},inplace=True)
+dates['tmax'] = tmax
+
+tmax_monthly = dates.resample(rule='M', on='date')['tmax'].mean()
+tmax_monthly = pd.DataFrame(tmax_monthly)
+tmax_monthly.reset_index(inplace=True)
+tmax_monthly['month'] = pd.to_datetime(tmax_monthly['date']).dt.month
+tmax_monthly = tmax_monthly[tmax_monthly.month.isin([4,5,6,7,8,9])]
+maxes = np.array(tmax_monthly.tmax)
+
+# calculate correlation between monthly SST anomalies in each grid cell and domain-averaged Tmax
+corrs = np.empty(16020)
+pvals = np.empty(16020)
+corrs[:] = np.nan
+pvals[:] = np.nan
+for k in range(16020):
+    cell = sst_vec[:,k]
+    if np.nanmax(cell) > 0:
+        corrs[k] = stats.pearsonr(cell,maxes)[0]
+        pvals[k] = stats.pearsonr(cell,maxes)[1]
+
+lat = np.arange(-88,88.1,2)
+lon = np.arange(0,358.1,2)
+lon, lat = np.meshgrid(lon, lat)
+
+var = np.reshape(corrs,(89,180))
+proj = ccrs.PlateCarree()
+fig, axes = plt.subplots(1, 1, figsize=(10,6), subplot_kw=dict(projection=proj))
+axes.set_extent([-180, 0, -20, 60], crs=ccrs.PlateCarree())
+im = axes.pcolormesh(lon, lat, var, cmap=plt.cm.get_cmap('RdBu_r',12),
+                   transform=ccrs.PlateCarree(), zorder=2, vmin=-0.3, vmax=0.3)
+axes.coastlines(zorder=101)
+#axes.add_feature(cartopy.feature.OCEAN, zorder=100, edgecolor='k',
+#               facecolor='w')
+axes.add_feature(cartopy.feature.BORDERS, zorder=100, edgecolor='k',
+               linestyle='solid', linewidth=0.5)
+#ax_list[i].set_xticks(np.arange(-180,181,60), crs=ccrs.PlateCarree())
+#ax_list[i].set_yticks(np.arange(-90,91,60), crs=ccrs.PlateCarree())
+plt.title('Monthly correlation between detrended SST anomalies \n and detrended, domain-averaged Tmax', size=20)
+fig.colorbar(im, ax=axes, ticks=np.arange(-0.3,0.31,0.1), 
+             shrink=0.7, location='bottom', fraction=0.05, pad=0.07, aspect=45)
