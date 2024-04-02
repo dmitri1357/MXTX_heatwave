@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import pandas as pd  
+from netCDF4 import Dataset
+from scipy import stats
+from mvgavg import mvgavg
+
+# set font to Arial
+import matplotlib as mpl
+mpl.rc('font',family='Arial')
+
+# datasets can be found in accompanying Zenodo repository
+
+dataset = Dataset('sst.mnmean.nc') # load ERSSTv5 data
+sst = np.squeeze(np.array(dataset.variables['sst']))
+sst = np.where(sst < -100, np.nan, sst) # get rid of -inf values
+
+dates = pd.date_range(start='1/1/1854', end='10/31/2023', freq='M')
+dates = pd.DataFrame(dates)
+dates['month'] = pd.to_datetime(dates.iloc[:,0]).dt.month
+dates['year'] = pd.to_datetime(dates.iloc[:,0]).dt.year
+dates = dates[dates.month.isin([4,5,6,7,8,9])]
+dates = dates[dates.year >= 1940]
+idx = dates.index.values
+
+sst_subset = sst[idx,:]
+
+# flip lats
+sst_flipped = np.empty([504,89,180])
+for k in range(504):
+    day = sst_subset[k,:,:]
+    sst_flipped[k,:,:] = np.flipud(day)
+
+# aggregate monthly SST values to annual
+ssvec = np.reshape(sst_flipped,(504,16020))
+ssvec1 = np.split(ssvec,84,axis=0)
+annuals = np.empty([84,16020])
+for k in range(84):
+    yr = ssvec1[k]
+    annuals[k,:] = np.nanmean(yr,axis=0)
+annuals = np.reshape(annuals,(84,89,180))
+
+# calculate SST trendlines for each latitude band
+
+sst_trendlines = np.empty([89,84]) # 89 latitude bands, 84 years
+for k in range(89):
+    this_lat = annuals[:,k,:]
+    splits = np.split(this_lat,84,axis=0)
+    avgs = [np.nanmean(splits[j]) for j in range(84)]
+    slope = stats.linregress(np.arange(84),avgs)[0]
+    intercept = -slope # setting to -slope (zero first year) since I just want the slope step each year
+    vals1 = []
+    for i in range(84):
+        intercept += slope
+        vals1.append(intercept)
+    sst_trendlines[k,:] = vals1
+
+# detrend SST 
+
+sst_reshape = np.reshape(sst_flipped,(84,6,89,180))
+
+# running this code for entire year even though I only care about Apr-Sept --> so I can calculate z-scores from moving windows
+detrended_sst = np.empty([84,6,89,180])
+for k in range(89):
+    these_trends = list(sst_trendlines[k,:])
+    # add 84th year trend value (for 2023)
+    diff = these_trends[-1] - these_trends[-2]
+    last_val = these_trends[-1] + diff
+    these_trends.append(last_val)
+    this_lat = sst_reshape[:,:,k,:]
+    for j in range(180):
+        vals_at_this_cell = this_lat[:,:,j]
+        for i in range(84):
+            this_trend = these_trends[i]
+            yr = vals_at_this_cell[i,:]
+            detrended_sst[i,:,k,j] = yr - this_trend
+
+# calculate anomalies of detrended SST
+
+reshaped = np.reshape(detrended_sst,(84,6,16020))
+sub = reshaped[51:81,:,:]
+means = np.nanmean(sub,axis=0)
+
+sst_anoms = np.empty([84,6,16020])
+for k in range(84):
+    yr = reshaped[k,:]
+    sst_anoms[k,:,:] = yr - means
+
+sst_vec = np.reshape(sst_anoms,(504,16020))
+
+np.save('sst_vec',sst_vec.astype('float32'))
