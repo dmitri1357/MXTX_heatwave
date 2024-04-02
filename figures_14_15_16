@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt   
+from mpl_toolkits.basemap import Basemap
+
+# set font to Arial
+import matplotlib as mpl
+mpl.rc('font',family='Arial')
+
+# datasets can be found in accompanying Zenodo repository
+
+# first, the map of Z500 standardized, detrended anomalies on 6/20/2023 and the black rectangle over which circulation analog matching was performed (Fig 14a)
+
+zvec = np.load('zvec_detrended_z.npy')
+
+var = zvec[15269,:] 
+var = np.reshape(var,(89,128))
+lat = np.arange(14.75,36.76,0.25)
+lon = np.arange(-118.5,-86.74,0.25)
+lon, lat = np.meshgrid(lon, lat)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.7E6, height=3.3E6,
+            lat_0=25, lon_0=-102.6)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('RdBu_r',48))
+plt.title('Standardized, detrended Z500 anomaly on June 20, 2023', size=14)
+cb = plt.colorbar(ticks=np.arange(-3,3.01,0.5), aspect=45, orientation='horizontal')
+cb.ax.tick_params(labelsize=15)
+plt.clim(-3,3)
+m.readshapefile('circulation_bbox',name='oceans',color='k',linewidth=2) # this is the shapefile of the rectangle used for analog matching
+plt.savefig('fig_3a_and_colorbar.pdf',dpi=600)
+
+# Search for top 40 best-maching analog patterns to 6/20/2023
+
+all_corrs = np.load('all_corrs.npy') # load daily pattern correlations file
+
+dates = pd.date_range(start='1/1/1940', end='12/31/2023')
+dates = dates[~((dates.month == 2) & (dates.day == 29))]
+dates = pd.DataFrame(dates)
+dates['month'] = pd.to_datetime(dates.iloc[:,0]).dt.month
+dates = dates[dates.month.isin([4,5,6,7,8,9])]
+dates.reset_index(inplace=True)
+
+day_idx = np.arange(1,184,1)
+day_idxs = np.tile(day_idx,83)
+
+def find_matches_for_day_in_2023(target_day,end_year,day_window,num_analogs):
+    corrs = all_corrs[target_day,:]
+    
+    df1 = pd.DataFrame({'date':dates.iloc[:,1],'month':dates.month,
+                        'corr':corrs})  
+    
+    df1['year'] = pd.to_datetime(df1.date).dt.year
+    df2 = df1[df1.year<=end_year]
+    df2['day_idx'] = day_idxs
+    df3 = df2[df2.day_idx.between(target_day-15203,target_day-15173)] # now using 31-day window 
+    
+    dfx = df3.sort_values(by='corr',ascending=False)
+    day_accum = []
+    for k in range(df3.shape[0]):
+        day = dfx.index.values[k]
+        window = list(np.arange(day-np.floor(day_window/2),day+(np.floor(day_window/2)+1),1))
+        i, j = window[0], window[-1]
+        res = any(ele >= i and ele <= j for ele in day_accum)
+        if res == 0:
+            day_accum.append(day)
+    day_accum = np.array(day_accum)
+    
+    df5 = df3.loc[day_accum]
+    df8 = df5.iloc[:num_analogs] # grab top-N analogs
+    
+    df8['month'] = pd.to_datetime(df8.date).dt.month
+    df8['day'] = pd.to_datetime(df8.date).dt.day
+    
+    mats_idx = df8.index.values
+    
+    return mats_idx
+
+mats_idx = find_matches_for_day_in_2023(target_day=15269, # June 20, 2023
+                                        end_year=2022,
+                                        day_window=7,
+                                        num_analogs=40)
+
+z500 = np.load('zvec_detrended_z.npy')
+z500 = np.reshape(z500,(15372,89,128))
+
+mats = z500[mats_idx,:,:] # subset the file of detrended Z500 standardized anomalies to just the top-40 matches
+mats_idx2 = np.hstack([15269,mats_idx]) # add target day (6/20/2023) so that it can be displayed for comparison with the top-40 matches
+mats2 = z500[mats_idx2,:,:]
+
+# plot the top-40 analogs (fig 16)
+
+lat = np.arange(14.75,36.76,0.25)
+lon = np.arange(-118.5,-86.74,0.25)
+lon, lat = np.meshgrid(lon, lat)
+
+fig = plt.figure(figsize=(12,12))
+#plt.suptitle('May 2023 standardized Tmax anomalies', size=28)
+for x in range(41):
+    fig.add_subplot(6,7,x+1)
+    var = mats2[x,:]
+    if x > 0:
+        month = df8.month.iloc[x-1]
+        day = df8.day.iloc[x-1]
+        year = df8.year.iloc[x-1]
+    else:
+        month = 6
+        day = 20
+        year = 2023
+    
+    m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+                width=3.7E6, height=3.3E6,
+                lat_0=25, lon_0=-102.6)
+    m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+    m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+    m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+    m.drawcoastlines(color='black')
+    m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('RdBu_r',48))
+    plt.clim(-3,3)
+    plt.title(f'{x}) {month}-{day}-{year}', size=13) 
+    m.readshapefile('circulation_bbox',name='oceans',color='k',linewidth=2) 
+fig.subplots_adjust(hspace=0.5)
+
+# plot the boxplot (Fig 15)
+
+# maximum values
+zvec2 = np.load('zvec_smaller.npy') # standardized, detrended anomalies over rectangular subset region used for analog matching
+june20 = zvec2[15269,:] 
+np.nanmax(june20) # max 3.19 sd
+
+mats_domain = zvec2[mats_idx,:] 
+mat_maxs = np.nanmax(mats_domain,axis=1)
+np.nanmedian(mat_maxs) # median 2.14 sd
+
+fig = plt.figure(figsize=(6.5,8))
+bp = plt.boxplot(mat_maxs,
+              whis = [10,90], sym = 'o', showfliers = True,
+              medianprops = {'color': 'k'})
+[bp['boxes'][k].set(color='k') for k in range(1)]
+[bp['fliers'][k].set(markerfacecolor='tab:blue') for k in range(1)]
+plt.scatter(1,np.nanmax(june20),marker='*',c='tab:orange',s=500,alpha=0.8)
+plt.xticks(np.arange(1,2,1), (''), fontsize = 13)
+plt.yticks(np.arange(0,4.01,0.5), fontsize=15)
+plt.ylim(top=4)
+plt.ylim(bottom=0)
+#plt.ylabel('Z500 max detrended value', fontsize = 24)
+#plt.xlabel('Fraction Zone', fontsize = 24)
+#plt.axhline(y=0.5,color='black',linestyle='--')
+plt.title('Z500 maximum detrended z-scores \n for matched patterns', fontsize = 24)
+
+# plot the composite Z500 on the top-40 matches (fig 14b)
+
+mats3 = z500[mats_idx,:,:] 
+mat_means3 = np.mean(mats3,axis=0)
+mat_maxs3 = np.max(np.reshape(mats3,(40,11392)),axis=1)
+
+var = mat_means3
+lat = np.arange(14.75,36.76,0.25)
+lon = np.arange(-118.5,-86.74,0.25)
+lon, lat = np.meshgrid(lon, lat)
+
+plt.figure(figsize=(10, 8))
+m = Basemap(projection='lcc', area_thresh=10000, resolution='l',
+            width=3.7E6, height=3.3E6,
+            lat_0=25, lon_0=-102.6)
+m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
+m.drawstates(linewidth=0.5,linestyle='solid',color='k')
+m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
+m.drawcoastlines(color='black')
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('RdBu_r',48))
+#plt.colorbar(ticks=np.arange(-3,3.01,1))
+plt.title('Z500 detrended z-scores on top-40 best matched \n patterns to 6/20/2023', size=26)
+plt.clim(-3,3)
+m.readshapefile('circulation_bbox',name='oceans',color='k',linewidth=2) 
+
