@@ -35,7 +35,7 @@ cb = plt.colorbar(ticks=np.arange(-3,3.01,0.5), aspect=45, orientation='horizont
 cb.ax.tick_params(labelsize=15)
 plt.clim(-3,3)
 
-# panel C - Z500 anomalies on June 15-28, 2023
+# panel D - Z500 anomalies on June 15-28, 2023
 
 var = zvec[15264:15278,:] # date index (0 to 15371) represents all days between April-September, 1940-2023
 var = np.nanmean(var,axis=0)
