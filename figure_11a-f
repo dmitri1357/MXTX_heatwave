@@ -137,7 +137,7 @@ plt.savefig('fig_3c_and_colorbar.pdf',dpi=600)
 
 # panel F - soil moisture anomalies on June 15-28, 2023
 
-subset = tmax_z[15264:15278,:]
+subset = sm_amjjas2_z[15264:15278,:]
 var = np.nanmean(subset,axis=0)
 
 plt.figure(figsize=(10, 8))
@@ -148,10 +148,9 @@ m.fillcontinents(color='white',lake_color='white',alpha=1,zorder=0)
 m.drawstates(linewidth=0.5,linestyle='solid',color='k')
 m.drawcountries(linewidth=0.5,linestyle='solid',color='k')
 m.drawcoastlines(color='black')
-m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('RdBu_r',48))
-plt.title('Tmax anomalies during June 15-28, 2023', size=25)
+m.pcolormesh(lon, lat, var, latlon=True, cmap=plt.cm.get_cmap('BrBG',24))
+plt.title('Soil moist. anomalies during June 15-28, 2023', size=18)
 #cb = plt.colorbar(ticks=np.arange(-3,3.01,0.5))
 #cb.ax.tick_params(labelsize=15)
 plt.clim(-3,3)
 m.readshapefile('texas_mexico',name='oceans',color='b',linewidth=2)  
-
