@@ -174,7 +174,7 @@ ax1.set_xticks([0,3,6,9,12])
 ax1.set_xticklabels(['June 15','June 18','June 21','June 24','June 27'], fontsize = 13)
 ax1.plot(observed_tmax,'-o', color='firebrick', lw=2)
 ax1.plot(pred_deg_C,'-o', color='0.5', lw=2)
-ax1.plot(pred_deg_C_mlr,'-o', color='k', lw=2)
+ax1.plot(preds_trend_added,'-o', color='k', lw=2)
 ax1.plot(preds_trend_added_mlr,'-o', color='cornflowerblue', lw=2)
 ax1.tick_params(axis='y', labelsize=13)
 plt.title('June 15-28, 2023 daily domain-averaged \n Tmax and analog Tmax', fontsize = 20)
@@ -184,12 +184,12 @@ plt.savefig('fig_4a.pdf',dpi=600)
 fig = plt.figure(figsize=(8,6))
 plt.plot(observed_tmax,'-o', color='firebrick', lw=2)
 plt.plot(preds_trend_added_mlr,'-o', color='cornflowerblue', lw=2)
-plt.plot(pred_deg_C_mlr,'-o', color='k', lw=2)
+plt.plot(preds_trend_added,'-o', color='k', lw=2)
 plt.plot(pred_deg_C,'-o', color='0.5', lw=2)
 plt.yticks(np.arange(-5000,6001,1000), fontsize=13)
 l = plt.legend(['June 15-28, 2023 Tmax',
             'Tmax predicted by Z500 and SM + Tmax trend',
-            'Tmax predicted by Z500 and SM',
+            'Tmax predicted by Z500 + Tmax trend',
             'Tmax predicted by Z500 only'], 
             loc='lower right', fontsize=15)
 colors = ['firebrick','cornflowerblue','k','0.5']
