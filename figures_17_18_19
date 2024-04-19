@@ -495,7 +495,7 @@ ax1.plot(pred_deg_C_mlr,'-o', color='k', lw=2)
 ax1.plot(preds_trend_added_mlr,'-o', color='cornflowerblue', lw=2)
 ax1.axhline(y=np.mean(observed_tmax),linestyle='--', color='firebrick', lw=2)
 ax1.axhline(y=np.mean(pred_deg_C),linestyle='--', color='0.5', lw=2)
-ax1.axhline(y=np.mean(pred_deg_C_mlr),linestyle='--', color='k', lw=2)
+ax1.axhline(y=np.mean(preds_trend_added),linestyle='--', color='k', lw=2)
 ax1.axhline(y=np.mean(preds_trend_added_mlr),linestyle='--', color='cornflowerblue', lw=2)
 ax1.tick_params(axis='y', labelsize=13)
 plt.title('May-August 2023 daily domain-averaged \n Tmax and analog Tmax', fontsize = 20)
@@ -514,7 +514,7 @@ plt.plot(pred_deg_C,'-o', color='0.5', lw=2)
 plt.yticks(np.arange(-5000,6001,1000), fontsize=13)
 l = plt.legend(['2023 Tmax',
             'Tmax predicted by Z500 and SM + Tmax trend',
-            'Tmax predicted by Z500 and SM',
+            'Tmax predicted by Z500 + Tmax trend',
             'Tmax predicted by Z500 only'], 
             loc='lower right', fontsize=15)
 colors = ['firebrick','cornflowerblue','k','0.5']
