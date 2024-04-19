@@ -210,7 +210,7 @@ ax2.set_ylim(bottom=-2)
 ax2.set_xticks([0,3,6,9,12])
 ax2.set_xticklabels(['June 15','June 18','June 21','June 24','June 27'], fontsize = 13)
 ax2.plot(perc_explained_circulation, '-o', color='0.5', lw=2)
-ax2.plot(perc_explained_circulation_mlr, '-o', color='k', lw=2)
+ax2.plot(perc_explained_trend_added, '-o', color='k', lw=2)
 ax2.plot(perc_explained_trend_added_mlr, '-o', color='cornflowerblue', lw=2)
 ax2.tick_params(axis='y', labelcolor='k')
 ax2.tick_params(axis='y', labelsize=13)
@@ -225,7 +225,7 @@ plt.plot(perc_explained_trend_added, '-o', color='k', lw=2)
 plt.plot(perc_explained_circulation, '-o', color='0.5', lw=2)
 plt.yticks(np.arange(-5000,6001,1000), fontsize=13)
 l = plt.legend(['% explained by Z500 and SM + Tmax trend',
-                '% explained by Z500 and SM',
+                '% explained by Z500 + Tmax trend',
                 '% explained by Z500 only'],
                loc='lower right', fontsize=15)
 colors = ['cornflowerblue','k','0.5']
