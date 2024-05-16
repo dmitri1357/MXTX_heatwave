@@ -24,6 +24,8 @@ counts = [np.nansum(splits[k]) for k in range(84)]
 # plot panel A
 
 fig = plt.figure(figsize=(8,6))
+ax = plt.axes()
+ax.set_facecolor("0.8")
 plt.plot(counts,'-o', color='firebrick')
 #plt.plot(np.polyval(poly, x),'--', color='firebrick')
 #plt.grid(linewidth=0.5, color='0.5', alpha=0.5, linestyle='-.')
@@ -45,9 +47,26 @@ splits_df = pd.DataFrame(splits2)
 meanvals = []
 for k in range(84):
     meanvals.append(np.nanmean(splits_df.iloc[k,:]))
+    
+# repeat above 2 code blocks for SM
+
+sm_z_normed2 = np.load('sm_z_normed2.npy')
+sm_subs = np.where(mats==1,sm_z_normed2,np.nan) # grab Tmax on days that had matched patterns
+splits2 = np.split(sm_subs,84)
+splits_df = pd.DataFrame(splits2)
+
+# calculate Tmax means for each year on all matched pattern days
+meanvals_sm = []
+for k in range(84):
+    meanvals_sm.append(np.nanmean(splits_df.iloc[k,:]))
 
 fig = plt.figure(figsize=(8,6))
-plt.plot(meanvals,'o', color='firebrick', lw=2)
+ax = plt.axes()
+ax.set_facecolor("0.8")
+plt.scatter(np.arange(84), meanvals, marker='o', 
+            c=meanvals_sm, cmap=plt.cm.get_cmap('RdBu',20))
+plt.colorbar(ticks=np.arange(-2.5,2.51,0.5))
+plt.clim(-2.5,2.5)
 plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
                                 '1990','2000','2010','2020'), fontsize = 13)
 plt.yticks(np.arange(-3,3.1,0.5), fontsize=13)
