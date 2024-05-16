@@ -38,8 +38,9 @@ plt.savefig('fig_3g.pdf',dpi=600)
 
 # plot panel B
 
-tmax_z_normed2 = np.load('tmax_z_normed2.npy')
-tmax_subs = np.where(mats==1,tmax_z_normed2,np.nan) # grab Tmax on days that had matched patterns
+tmax_normed = np.load('tmax_normed.npy') 
+tmax_normed_domain = np.nanmean(tmax_normed,axis=1) # observed domain-average Tmax in actual units (Deg C), latitude normalized
+tmax_subs = np.where(mats==1,tmax_normed_domain,np.nan) # grab Tmax on days that had matched patterns
 splits2 = np.split(tmax_subs,84)
 splits_df = pd.DataFrame(splits2)
 
@@ -48,8 +49,6 @@ meanvals = []
 for k in range(84):
     meanvals.append(np.nanmean(splits_df.iloc[k,:]))
     
-# repeat above 2 code blocks for SM
-
 sm_z_normed2 = np.load('sm_z_normed2.npy')
 sm_subs = np.where(mats==1,sm_z_normed2,np.nan) # grab Tmax on days that had matched patterns
 splits2 = np.split(sm_subs,84)
@@ -69,7 +68,7 @@ plt.colorbar(ticks=np.arange(-2.5,2.51,0.5))
 plt.clim(-2.5,2.5)
 plt.xticks(np.arange(0,81,10), ('1940','1950','1960','1970','1980',
                                 '1990','2000','2010','2020'), fontsize = 13)
-plt.yticks(np.arange(-3,3.1,0.5), fontsize=13)
-plt.ylabel('Domain-averaged Tmax s.d.', fontsize = 18)
-plt.title('Domain-averaged Tmax s.d. during \n patterns similar to June 20, 2023', 
+plt.yticks(np.arange(24,36.1,2), fontsize=13)
+plt.ylabel('Domain-averaged Tmax (C)', fontsize = 18)
+plt.title('Domain-averaged Tmax during \n patterns similar to June 20, 2023', 
           fontsize = 20)
