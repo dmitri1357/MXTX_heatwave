@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 from mvgavg import mvgavg
 
 tmax_1940_2022 = np.load('tmax_1940_2022.npy')
@@ -201,7 +202,11 @@ tmax_anoms_z = np.load('tmax_anoms_z2.npy') # this contains spurious values for 
 dates['month'] = pd.to_datetime(dates.iloc[:,0]).dt.month
 dates = dates[dates.month.isin([4,5,6,7,8,9])]
 dates.drop(columns='month',inplace=True)
+dates.reset_index(inplace=True)
 
 data = np.array(dates.z_score)
 
-np.save('tmax_z_normed2',data)
+ds = xr.DataArray(data, name='tmax_z', coords={'time':dates.iloc[:,1]},
+                  dims=['time'])
+
+ds.to_netcdf('tmax_z_normed2.nc')
